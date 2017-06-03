@@ -3,7 +3,7 @@
 List each country name where the population is larger than that of 'Russia'.
 */
 SELECT name FROM world
-  WHERE population >
+  WHERE population > 
      (SELECT population FROM world
       WHERE name='Russia')
 
@@ -21,7 +21,7 @@ SELECT name FROM world
 List the name and continent of countries in the continents containing either Argentina or Australia. Order by name of the country.
 */
 SELECT name, continent FROM world
-WHERE continent IN (SELECT continent FROM world WHERE name IN ('Argentina', 'Australia'))
+  WHERE continent IN (SELECT continent FROM world WHERE name IN ('Argentina', 'Australia'))
 ORDER BY name
 
 
@@ -30,38 +30,33 @@ ORDER BY name
 Which country has a population that is more than Canada but less than Poland? Show the name and the population.
 */
 SELECT name, population FROM world
-WHERE population >
+  WHERE population >
 (SELECT population FROM world WHERE name='Canada')
-AND  population <
+  AND  population <
 (SELECT population FROM world WHERE name='Poland')
 
 --#5
 /*
 List each country name where the population is larger than that of 'Russia'.
 */
-SELECT name, CONCAT(ROUND(population/(SELECT population FROM world WHERE name = 'Germany')*100, 0), '%')
-FROM world
+SELECT name, CONCAT(ROUND(population/(SELECT population FROM world WHERE name = 'Germany')*100, 0), '%') FROM world
 WHERE continent ='Europe'
-
 
 --#For exampley
 /*
 Find the largest country in the world, by population 
 */
-SELECT name
-  FROM world
- WHERE population >= ALL(SELECT population
-                           FROM world
-                          WHERE population>0)
+SELECT name FROM world
+  WHERE population >= ALL(SELECT population FROM world
+                            WHERE population>0)
 
 --#6
 /*
 Which countries have a GDP greater than every country in Europe? [Give the name only.] (Some countries may have NULL gdp values)
 */
 SELECT name FROM world
-WHERE gdp > ALL(SELECT gdp
-                   FROM world
-                  WHERE gdp > 0 AND continent = 'Europe')
+  WHERE gdp > ALL(SELECT gdp FROM world
+                    WHERE gdp > 0 AND continent = 'Europe')
 
 --#7
 /*
