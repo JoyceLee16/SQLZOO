@@ -2,9 +2,10 @@
 /*
 List each country name where the population is larger than that of 'Russia'.
 */
-SELECT yr, subject, winner
-FROM nobel
-WHERE yr = 1950
+SELECT name FROM world
+  WHERE population >
+     (SELECT population FROM world
+      WHERE name='Russia')
 
 --#2
 /*
