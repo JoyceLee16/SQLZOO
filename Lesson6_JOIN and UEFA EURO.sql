@@ -5,7 +5,8 @@ The * says to list all the columns in the table - a shorter way of saying matchi
 Modify it to show the matchid and player name for all goals scored by Germany. 
 To identify German players, check for: teamid = 'GER'
 */
-SELECT name, continent, population FROM world
+SELECT matchid, player FROM goal 
+  WHERE teamid = 'GER'
 
 --#2
 /*
@@ -21,89 +22,130 @@ WHERE id = 1012
 
 --#3
 /*
-Give the name and the per capita GDP for those countries with a population of at least 200 million.
-#per capita GDP is the GDP divided by the population GDP/population
+The FROM clause says to merge data from the goal table with that from the game table. 
+The ON says how to figure out which rows in game go with which rows in goal - the id from goal must match matchid from game. 
+(If we wanted to be more clear/specific we could say ON (game.id=goal.matchid)
+The code below shows the player (from the goal) and stadium name (from the game table) for every goal scored.
+Modify it to show the player, teamid, stadium and mdate and for every German goal.
 */
-SELECT name, GDP/population FROM world
-WHERE population >= 200000000
+SELECT player, teamid, stadium, mdate 
+  FROM game JOIN goal ON (id=matchid AND teamid='GER')
 
 --#4
 /*
-Show the name and population in millions for the countries of the continent 'South America'. 
-Divide the population by 1000000 to get population in millions.
+Use the same JOIN as in the previous question.
+Show the team1, team2 and player for every goal scored by a player called Mario player LIKE 'Mario%'
 */
-SELECT name,population/1000000 FROM world
-WHERE continent = 'South America'
+SELECT  team1, team2, player 
+  FROM game JOIN goal ON (id=matchid AND player LIKE 'Mario%')
 
 --#5
 /*
-Show the name and population for France, Germany, Italy
+The table eteam gives details of every national team including the coach. 
+You can JOIN goal to eteam using the phrase goal JOIN eteam on teamid=id
+Show player, teamid, coach, gtime for all goals scored in the first 10 minutes gtime<=10
 */
-SELECT name,population FROM world
-WHERE name IN ('France', 'Germany', 'Italy');
+SELECT player, teamid, coach, gtime
+  FROM eteam JOIN goal ON (teamid=id)
+ WHERE gtime<=10
+ 
+OR
+
+SELECT player, teamid, coach, gtime
+  FROM eteam JOIN goal ON (teamid=id AND gtime<=10)
 
 --#6
 /*
-Show the countries which have a name that includes the word 'United'
+To JOIN game with eteam you could use either
+game JOIN eteam ON (team1=eteam.id) or game JOIN eteam ON (team2=eteam.id)
+Notice that because id is a column name in both game and eteam you must specify eteam.id instead of just id
+List the the dates of the matches and the name of the team in which 'Fernando Santos' was the team1 coach.
 */
-SELECT name FROM world
-WHERE name LIKE '%United%';
+SELECT mdate, teamname
+  FROM eteam JOIN game ON (team1=eteam.id AND coach='Fernando Santos')
 
 --#7
 /*
-Show the countries that are big by area or big by population. Show name, population and area.
+List the player for every goal scored in a game where the stadium was 'National Stadium, Warsaw'
 */
-SELECT name,population, area FROM world
-WHERE area > 3000000 OR population > 250000000;
+SELECT player
+  FROM goal JOIN game ON(id=matchid AND stadium= 'National Stadium, Warsaw')
 
 --#8
 /*
-Exclusive OR (XOR). Show the countries that are big by area or big by population but not both. Show name, population and area.
+The example query shows all goals scored in the Germany-Greece quarterfinal.
+Instead show the name of all players who scored a goal against Germany.
+HINT
+Select goals scored only by non-German players in matches where GER was the id of either team1 or team2.
+You can use teamid!='GER' to prevent listing German players.
+You can use DISTINCT to stop players being listed twice.
 */
-SELECT name, population, area FROM world
-WHERE area > 3000000 XOR population > 250000000;
+SELECT DISTINCT(player)
+  FROM game JOIN goal ON matchid = id 
+    WHERE ((team1='GER' OR team2='GER') AND teamid!='GER')
 
 --#9
 /*
-Show the name and population in millions and the GDP in billions for the countries of the continent 'South America'. 
-Use the ROUND function to show the values to two decimal places.
-For South America show population in millions and GDP in billions both to 2 decimal places.
+Show teamname and the total number of goals scored.
+COUNT and GROUP BY
+You should COUNT(*) in the SELECT line and GROUP BY teamname
 */
-SELECT name, ROUND(population/1000000,2), ROUND(gdp/1000000000,2) FROM world
-WHERE continent = 'South America';
+SELECT teamname, COUNT(teamid)
+  FROM eteam JOIN goal ON id=teamid
+ GROUP BY teamname
 
 --#10
 /*
-Show the name and per-capita GDP for those countries with a GDP of at least one trillion (1000000000000; that is 12 zeros). 
-Round this value to the nearest 1000.
+Show the stadium and the number of goals scored in each stadium.
 */
-SELECT name,  ROUND(gdp/population,-3) FROM world
-WHERE gdp > 1000000000000;
+SELECT stadium, COUNT(teamid)
+  FROM game JOIN goal ON id=matchid
+ GROUP BY stadium
+ 
+ OR
+ 
+SELECT stadium, COUNT(player) AS goals
+ FROM game
+  JOIN goal ON (id=matchid)
+GROUP BY stadium
 
 --#11
 /*
-Show the name and capital where the name and the capital have the same number of characters.
+For every match involving 'POL', show the matchid, date and the number of goals scored.
 */
-SELECT name, capital FROM world
-WHERE length(name) = length(capital);
+SELECT matchid,mdate, COUNT(teamid)
+  FROM game JOIN goal ON matchid = id 
+ WHERE (team1 = 'POL' OR team2 = 'POL')
+GROUP BY matchid, mdate
 
 --#12
 /*
-Show the name and the capital where the first letters of each match.
-Don't include countries where the name and the capital are the same word.
+For every match where 'GER' scored, show matchid, match date and the number of goals scored by 'GER'
 */
-SELECT name,capital FROM world
-WHERE LEFT(name,1)=LEFT(capital,1) AND name<>capital
+SELECT matchid, mdate, COUNT(teamid)
+  FROM game JOIN goal ON matchid = id 
+ WHERE (teamid = 'GER')
+GROUP BY matchid, mdate
 
 --#13
 /*
-Find the country that has all the vowels and no spaces in its name.
+List every match with the goals scored by each team as shown. 
+This will use "CASE WHEN" which has not been explained in any previous exercises.
+
+mdate	team1	score1	team2	score2
+1 July 2012	ESP	4	ITA	0
+10 June 2012	ESP	1	ITA	1
+10 June 2012	IRL	1	CRO	3
+...
+
+Notice in the query given every goal is listed. If it was a team1 goal then a 1 appears in score1, otherwise there is a 0. 
+You could SUM this column to get a count of the goals scored by team1. Sort your result by mdate, matchid, team1 and team2.
 */
-SELECT name
-   FROM world
-WHERE name LIKE '%a%'
-   AND name LIKE '%e%'
-   AND name LIKE '%i%'
-   AND name LIKE '%o%'
-   AND name LIKE '%u%'
-   AND name NOT LIKE '% %'
+SELECT mdate,
+       team1,
+       SUM(CASE WHEN teamid = team1 THEN 1 ELSE 0 END) AS score1,
+       team2,
+       SUM(CASE WHEN teamid = team2 THEN 1 ELSE 0 END) AS score2 FROM
+    game LEFT JOIN goal ON (id = matchid)
+    GROUP BY mdate, team1, team2
+    ORDER BY mdate, matchid, team1, team2
