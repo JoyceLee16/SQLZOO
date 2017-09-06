@@ -1,0 +1,77 @@
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+pathProg = 'C:\\Users\\gugu\\Desktop\\iii\\Archive'
+os.chdir(pathProg)
+import csv
+import numpy
+
+
+
+
+names = []
+family = []
+num = []
+
+with open('api.csv') as csvDataFile:
+    csvReader = csv.reader(csvDataFile)
+    for row in csvReader:
+        names.append(row[0])
+        family.append(row[1])
+        num.append(len(row[2:]))
+
+#print(names)
+#print(family)
+
+#print len(num)
+#print names
+#print family
+#print num
+
+data = pd.DataFrame({'Family':family[1:], 'Num':num[1:]})
+#print data
+com = data.groupby(['Family','Num']).size().reset_index().rename(columns={0:'Count'})
+#print com
+a = com.Family.unique()
+ll = 600/50
+
+
+g = numpy.arange(50, 601, 50)
+for j in range(0,len(a)):
+    #b = pd.DataFrame(com.loc[com['Family'] == a[j]])
+    #b.to_csv(a[j] + '.csv', index=False, header=False)
+    a1 = com.loc[com['Family'] == a[j]].Num.tolist()
+    #print(a1)
+    a2 = com.loc[com['Family'] == a[j]].Count.tolist()
+    # a1 = map(int, a1)
+    aa = pd.DataFrame({'A': a1, 'B': a2})
+
+    bb = []
+    for i in range(1, ll):
+        c = aa.loc[(aa['A'] > 50 * i) & (aa['A'] <= 50 * (i + 1)), 'B'].sum()
+        bb.append(c)
+    bb2 = numpy.repeat(bb,50)
+    print len(bb2),len(numpy.arange(51, 601, 1))
+    plt.bar(numpy.arange(51, 601, 1), bb2, alpha=0.5)
+    plt.xlabel('Number')
+    plt.ylabel('Count')
+    plt.title(a[j] + ' Bar Plot')
+    plt.ylim([0, 300])
+    plt.xlim([50, 600])
+    plt.show()
+
+
+
+#print(a2)
+#plt.figure()
+# df2 = pd.DataFrame(a2)
+# df2.index = a1
+# print df2
+# df2 = a1.to_frame().join(a2.to_frame())
+
+
+#from bokeh.charts import Bar, output_file, show
+#p=Bar(a2, a1)
+#output_file("bar.html")
+#show(p)
